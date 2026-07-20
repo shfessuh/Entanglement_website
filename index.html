@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Unfavorable Immigration Policies, 2004&ndash;2014</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- ===== REQUIRED EXTERNAL DEPENDENCIES ===== -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+    <style>
+
+      :root {
+        --panel-bg: rgba(26,26,46,0.95);
+        --panel-border: rgba(255,255,255,0.12);
+        --panel-text: #f0f0f0;
+        --panel-accent: #4ECDC4;
+        --unfav-accent: #fe7156;
+        --box-bg: rgba(0,0,0,0.25);
+        --box-border: rgba(255,255,255,0.1);
+      }
+      body { margin: 0; background: #1a1a2e; }
+      .leaflet-interactive:focus { outline: none; }
+      path.leaflet-interactive { outline: none; }
+
+      #map-container {
+        width: 100%;
+        height: 100vh;
+        min-height: 700px;
+        display: flex;
+        position: relative;
+        background: #1a1a2e;
+        overflow: hidden;
+      }
+
+      #map-sidebar {
+        width: 220px;
+        flex-shrink: 0;
+        background: var(--panel-bg);
+        backdrop-filter: blur(16px);
+        padding: 22px 14px;
+        font-family: 'Inter', sans-serif;
+        color: var(--panel-text);
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+      }
+      .sidebar-header {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 3px;
+        text-align: center;
+        margin-bottom: 18px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        color: rgba(255,255,255,0.6);
+      }
+      .mode-box {
+        background: var(--box-bg);
+        border: 1px solid var(--box-border);
+        border-radius: 6px;
+        margin-bottom: 10px;
+        overflow: hidden;
+      }
+      .mode-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 12px;
+        cursor: pointer;
+        user-select: none;
+        font-weight: 600;
+        font-size: 12px;
+        color: var(--panel-text);
+      }
+      .mode-header:hover { background: rgba(255,255,255,0.04); }
+      .mode-header .title-wrap { display: flex; align-items: center; gap: 6px; }
+      .help-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: var(--panel-accent);
+        color: #1a1a2e;
+        font-size: 9px;
+        font-weight: 700;
+        cursor: help;
+      }
+      .chevron {
+        font-size: 9px;
+        color: rgba(255,255,255,0.5);
+        transition: transform 0.2s;
+      }
+      .mode-box.open { border-color: rgba(78,205,196,0.4); }
+      .mode-box.open .chevron { transform: rotate(180deg); }
+      .mode-body {
+        display: none;
+        padding: 10px 12px 12px;
+        border-top: 1px solid var(--box-border);
+        font-size: 11px;
+      }
+      .mode-box.open .mode-body { display: block; }
+      .mode-desc {
+        font-size: 10px;
+        color: rgba(255,255,255,0.5);
+        line-height: 1.5;
+        margin: 6px 0;
+      }
+      .slider-label {
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: rgba(255,255,255,0.4);
+        margin-bottom: 4px;
+        margin-top: 8px;
+      }
+      .slider-row { display: flex; align-items: center; gap: 6px; }
+      .slider-row input[type=range] { flex: 1; accent-color: var(--panel-accent); }
+      .slider-val {
+        font-size: 11px;
+        color: var(--panel-accent);
+        font-weight: 700;
+        min-width: 32px;
+        text-align: right;
+      }
+      .reset-btn {
+        padding: 10px 12px;
+        background: rgba(78,205,196,0.15);
+        color: var(--panel-accent);
+        border: 1px solid rgba(78,205,196,0.4);
+        border-radius: 5px;
+        font-family: inherit;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      .reset-btn:hover { background: rgba(78,205,196,0.25); }
+
+      .method-toggle { display:flex; gap:4px; margin-bottom:8px; }
+      .method-toggle button {
+        flex:1; padding:6px 6px; font:600 10px/1 'Inter',sans-serif;
+        background:rgba(0,0,0,0.35); color:rgba(255,255,255,0.6);
+        border:1px solid rgba(255,255,255,0.12); border-radius:4px; cursor:pointer;
+      }
+      .method-toggle button.active {
+        background:rgba(78,205,196,0.18); color:var(--panel-accent);
+        border-color:rgba(78,205,196,0.5);
+      }
+      .play-btn {
+        width: 26px; height: 26px; flex-shrink: 0;
+        border-radius: 50%;
+        background: rgba(0,0,0,0.35);
+        color: var(--panel-accent);
+        border: 1px solid rgba(78,205,196,0.4);
+        font-size: 10px; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        padding: 0; line-height: 1;
+      }
+      .play-btn:hover, .play-btn.playing { background: rgba(78,205,196,0.25); }
+
+      #map-legend {
+        background: var(--box-bg);
+        border: 1px solid var(--box-border);
+        border-radius: 6px;
+        padding: 10px 12px;
+        font-family: 'Inter', sans-serif;
+        font-size: 11px;
+        color: rgba(255,255,255,0.75);
+        margin-top: auto;     
+        margin-bottom: 10px;
+      }
+      #map-legend .legend-title {
+        font-weight: 600; font-size: 10px; letter-spacing: 0.5px;
+        color: rgba(255,255,255,0.55); margin-bottom: 6px;
+        text-transform: uppercase;
+      }
+      #map-legend .legend-row { display: flex; align-items: center; gap: 7px; margin-bottom: 3px; }
+      #map-legend .legend-swatch {
+        width: 15px; height: 11px; border-radius: 2px;
+        border: 1px solid rgba(255,255,255,0.2); flex-shrink: 0;
+      }
+
+      #year-bar {
+        position: absolute;
+        bottom: 16px;
+        left:234px;
+        width: min(820px, calc(100% - 270px));
+        background: var(--panel-bg);
+        backdrop-filter: blur(16px);
+        border: 1px solid var(--panel-border);
+        border-radius: 10px;
+        padding: 12px 18px 8px;
+        font-family: 'Inter', sans-serif;
+        z-index: 999;
+        box-shadow: 0 6px 30px rgba(0,0,0,0.45);
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      #year-bar .slider-stack { flex: 1; min-width: 0; }
+      #year-bar input[type=range] {
+        width: 100%;
+        accent-color: var(--panel-accent);
+        margin: 0;
+        display: block;
+      }
+      #year-ticks {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 4px;
+        padding: 0 2px;
+      }
+      #year-ticks .ytick {
+        font-size: 10px;
+        font-weight: 600;
+        color: rgba(255,255,255,0.45);
+        cursor: pointer;
+        padding: 2px 3px;
+        border-radius: 3px;
+        transition: color 0.15s, background 0.15s;
+        user-select: none;
+      }
+      #year-ticks .ytick:hover { color: rgba(255,255,255,0.85); }
+      #year-ticks .ytick.active {
+        color: var(--panel-accent);
+        background: rgba(78,205,196,0.15);
+      }
+      #year-bar .slider-val {
+        font-size: 16px;
+        color: var(--panel-accent);
+        font-weight: 700;
+        min-width: 44px;
+        text-align: right;
+        flex-shrink: 0;
+      }
+
+      #cluster-map {
+        flex: 1;
+        min-width: 0;
+        height: 100%;
+        background: #1a1a2e;
+      }
+      .leaflet-container { background: #1a1a2e !important; }
+
+      #county-panel {
+        position: absolute;
+        right: -260px;
+        top: 420px;
+        width: 230px;
+        max-height: calc(100% - 440px);
+        background: var(--panel-bg);
+        backdrop-filter: blur(16px);
+        padding: 0;
+        font-family: 'Inter', sans-serif;
+        color: var(--panel-text);
+        overflow-y: auto;
+        border: 1px solid var(--panel-border);
+        border-radius: 10px;
+        z-index: 9999;
+        transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+      }
+      #county-panel.open { right: 14px; }
+      #county-panel .panel-inner { padding: 18px 16px; position: relative; }
+      #county-panel .close-x {
+        position: absolute;
+        top: 8px; right: 10px;
+        cursor: pointer;
+        font-size: 22px;
+        color: rgba(255,255,255,0.5);
+        width: 28px; height: 28px;
+        display: flex; align-items: center; justify-content: center;
+        border-radius: 4px; line-height: 1; z-index: 10;
+        user-select: none; background: transparent; border: none; padding: 0;
+      }
+      #county-panel .close-x:hover { color: #fff; background: rgba(255,255,255,0.15); }
+      #county-panel h2 {
+        font-size: 14px; font-weight: 600; margin: 0 0 3px;
+        color: var(--panel-text); line-height: 1.3; padding-right: 32px;
+      }
+      #county-panel .fips { font-size: 10px; color: rgba(255,255,255,0.35); }
+      #county-panel .context-line {
+        display: inline-block;
+        font-size: 10px;
+        color: var(--panel-accent);
+        background: rgba(78,205,196,0.12);
+        border: 1px solid rgba(78,205,196,0.35);
+        border-radius: 4px;
+        padding: 3px 8px;
+        margin-top: 8px;
+      }
+      #county-panel .total-row {
+        display: flex; align-items: baseline; justify-content: space-between;
+        margin-top: 14px; padding-bottom: 8px;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+      }
+      #county-panel .total-label { font-size: 10.5px; color: rgba(255,255,255,0.65); }
+      #county-panel .total-val { font-size: 22px; font-weight: 700; color: var(--unfav-accent); }
+      #county-panel .sec {
+        font-size: 10px; font-weight: 600;
+        color: rgba(255,255,255,0.45);
+        text-transform: uppercase; letter-spacing: 1px;
+        margin: 14px 0 6px; padding-bottom: 4px;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+      }
+      #county-panel .driver-row {
+        display: flex; justify-content: space-between;
+        padding: 5px 0; font-size: 10.5px;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+      }
+      #county-panel .driver-row:last-child { border-bottom: none; }
+      #county-panel .driver-name { color: rgba(255,255,255,0.65); }
+      #county-panel .driver-val {
+        color: var(--panel-accent); font-weight: 700;
+        background: rgba(78,205,196,0.12);
+        border-radius: 8px; padding: 0 8px;
+      }
+      #county-panel .none-note {
+        font-size: 10.5px; color: rgba(255,255,255,0.4);
+        font-style: italic; padding: 4px 0;
+      }
+      #county-panel .footnote {
+        font-size: 9px; color: rgba(255,255,255,0.3);
+        margin-top: 10px; line-height: 1.5;
+      }
+
+      /* ===== tooltips — same dark glass as original ===== */
+      .leaflet-tooltip {
+        background: rgba(26,26,46,0.95) !important;
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.12) !important;
+        border-radius: 8px !important;
+        padding: 10px 14px !important;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
+        font-family: 'Inter', sans-serif !important;
+        color: #f0f0f0 !important;
+        font-size: 12px !important;
+        line-height: 1.5 !important;
+      }
+      .leaflet-tooltip-top:before, .leaflet-tooltip-bottom:before,
+      .leaflet-tooltip-left:before, .leaflet-tooltip-right:before { display: none !important; }
+      .tt-name { font-weight: 600; font-size: 13px; color: #f0f0f0; }
+      .tt-fips { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+      .tt-val  { font-size: 11px; color: var(--unfav-accent); margin-top: 3px; font-weight: 600; }
+      .tt-hint { font-size: 10px; color: rgba(255,255,255,0.45); margin-top: 3px; font-style: italic; }
+
+      #map-loading {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        color: rgba(255,255,255,0.6);
+        font-family: 'Inter', sans-serif;
+        font-size: 13px;
+        z-index: 1000;
+      }
+
+      #map-help-btn {
+        position: absolute;
+        top: 14px; right: 14px;
+        z-index: 1001;
+        width: 34px; height: 34px;
+        border-radius: 50%;
+        border: 1px solid rgba(78,205,196,0.5);
+        background: var(--panel-bg);
+        color: var(--panel-accent);
+        font: 700 16px/1 'Inter', sans-serif;
+        cursor: pointer;
+      }
+      #map-help-btn:hover { background: rgba(78,205,196,0.2); }
+
+      #intro-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 10000;
+        background: rgba(0,0,0,0.6);
+        display: none;
+        align-items: center;
+        justify-content: center;
+      }
+      #intro-overlay.open { display: flex; }
+      #intro-modal {
+        position: relative;
+        width: 460px;
+        max-width: calc(100% - 40px);
+        background: var(--panel-bg);
+        border: 1px solid var(--panel-border);
+        border-radius: 12px;
+        padding: 26px 26px 20px;
+        font-family: 'Inter', sans-serif;
+        color: var(--panel-text);
+        box-shadow: 0 12px 50px rgba(0,0,0,0.6);
+      }
+      #intro-modal h3 { margin: 0 0 10px; font-size: 17px; color: var(--panel-accent); }
+      #intro-modal p { font-size: 13px; line-height: 1.6; color: rgba(255,255,255,0.75); }
+      .intro-close {
+        position: absolute; top: 10px; right: 12px;
+        background: none; border: none; color: rgba(255,255,255,0.5);
+        font-size: 22px; cursor: pointer; line-height: 1;
+      }
+      .intro-close:hover { color: #fff; }
+      .intro-slide { display: none; }
+      .intro-slide.active { display: block; }
+      .intro-visual {
+        margin-top: 12px; padding: 12px;
+        background: var(--box-bg);
+        border: 1px solid var(--box-border);
+        border-radius: 6px;
+        font-size: 12px;
+        color: rgba(255,255,255,0.7);
+      }
+      .intro-controls {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-top: 18px;
+      }
+      .intro-dots { display: flex; gap: 6px; }
+      .intro-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.2); }
+      .intro-dot.active { background: var(--panel-accent); }
+      .intro-buttons { display: flex; gap: 8px; }
+      .intro-btn {
+        padding: 7px 16px; border-radius: 5px;
+        font: 600 12px 'Inter', sans-serif;
+        cursor: pointer; border: 1px solid transparent;
+      }
+      .intro-btn.primary {
+        background: rgba(78,205,196,0.2);
+        color: var(--panel-accent);
+        border-color: rgba(78,205,196,0.5);
+      }
+      .intro-btn.secondary {
+        background: transparent;
+        color: rgba(255,255,255,0.6);
+        border-color: rgba(255,255,255,0.15);
+      }
+      .intro-btn:disabled { opacity: 0.35; cursor: default; }
+    </style>
+  </head>
+  <body>
+
+    <div id="map-container">
+
+      <!-- ============ SIDEBAR (left, same structure as original) ============ -->
+      <div id="map-sidebar">
+        <div class="sidebar-header">DATA VIEW</div>
+
+        <!-- LEVEL: state vs county -->
+        <div class="mode-box open" id="box-level">
+          <div class="mode-header" onclick="toggleBox('level')">
+            <div class="title-wrap">
+              <span>Level</span>
+              <span class="help-icon" title="Which level of government's unfavorable policies color the map. County shows each county's own policies; State colors every county by its state's policies.">?</span>
+            </div>
+            <span class="chevron">&#9660;</span>
+          </div>
+          <div class="mode-body">
+            <div class="method-toggle" id="level-toggle">
+              <button data-level="county" class="active">County</button>
+              <button data-level="state">State</button>
+            </div>
+            <div class="mode-desc" id="level-desc">Each county is colored by its own county-level unfavorable policies.</div>
+          </div>
+        </div>
+
+        <!-- MEASURE: cumulative vs new -->
+        <div class="mode-box open" id="box-measure">
+          <div class="mode-header" onclick="toggleBox('measure')">
+            <div class="title-wrap">
+              <span>Count</span>
+              <span class="help-icon" title="Cumulative counts every unfavorable policy passed up through the selected year. New counts only policies passed in the selected year.">?</span>
+            </div>
+            <span class="chevron">&#9660;</span>
+          </div>
+          <div class="mode-body">
+            <div class="method-toggle" id="measure-toggle">
+              <button data-measure="cum" class="active">Cumulative</button>
+              <button data-measure="Count">Count</button>
+            </div>
+            <div class="mode-desc" id="measure-desc">All unfavorable policies passed through the selected year.</div>
+          </div>
+        </div>
+
+        <div id="map-legend"></div>
+        <button class="reset-btn" onclick="resetAll()">Reset View</button>
+      </div>
+
+      <!-- ============ MAP ============ -->
+      <div id="cluster-map"></div>
+      <div id="map-loading">Loading map...</div>
+
+      <!-- year controls — bottom of the map -->
+      <div id="year-bar">
+        <button class="play-btn" id="play-btn" title="Animate">&#9654;</button>
+        <div class="slider-stack">
+          <input type="range" id="year-slider" min="0" max="10" value="10" step="1">
+          <div id="year-ticks"></div>
+        </div>
+        <div class="slider-val" id="year-val">2014</div>
+      </div>
+
+      <!-- slide-in panel: type breakdown for the CURRENT toggles -->
+      <div id="county-panel">
+        <button type="button" class="close-x" id="panel-close-btn" aria-label="Close">&times;</button>
+        <div class="panel-inner" id="cp-body"></div>
+      </div>
+
+      <!-- Help button -->
+      <button id="map-help-btn" type="button" aria-label="Help" title="What is this map?">?</button>
+
+      <!-- Intro modal -->
+      <div id="intro-overlay">
+        <div id="intro-modal">
+          <button type="button" class="intro-close" id="intro-close-btn" aria-label="Close">&times;</button>
+
+          <div class="intro-slide active" data-slide="0">
+            <h3>What is this map?</h3>
+            <p>This map shows where <strong>unfavorable immigration policies</strong> were adopted across U.S. counties and states between <strong>2004 and 2014</strong>.</p>
+            <p>Policies include measures like Secure Communities participation, mandatory E-Verify, REAL ID implementation, and anti-solicitation ordinances.</p>
+            <div class="intro-visual">
+              Darker shades mean more unfavorable policies. Click any county to see exactly which policy types are behind its count.
+            </div>
+          </div>
+
+          <div class="intro-slide" data-slide="1">
+            <h3>Level &amp; Count</h3>
+            <p><strong>Level</strong> switches between each county's own policies and the policies of its state &mdash; in State view, whole states light up together.</p>
+            <p><strong>Count</strong> switches between <strong>Cumulative</strong> (everything passed up through the selected year) and <strong>Count</strong> (only what passed in that year).</p>
+            <div class="intro-visual">
+              Cumulative shows the policy landscape in place; New reveals the waves of adoption.
+            </div>
+          </div>
+
+          <div class="intro-slide" data-slide="2">
+            <h3>Exploring the Map</h3>
+            <p><strong>Hover</strong> over any county for its count. <strong>Click</strong> to open the breakdown panel showing the policy types behind that number &mdash; it always reflects your current Level, Count, and Year selections.</p>
+            <p>Press <strong>&#9654;</strong> next to the year slider to animate the 2004&ndash;2014 rollout.</p>
+            <div class="intro-visual">
+              Ready to explore? Click <strong>Get Started</strong> below.
+            </div>
+          </div>
+
+          <div class="intro-controls">
+            <div class="intro-dots" id="intro-dots"></div>
+            <div class="intro-buttons">
+              <button type="button" class="intro-btn secondary" id="intro-back-btn">Back</button>
+              <button type="button" class="intro-btn primary" id="intro-next-btn">Next</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <script>
+      /* =================================================================
+         DATA FILES REQUIRED (same directory as this file):
+         - policy_data.json     (from prepare_map_data.py)
+         - counties.geojson     (from prepare_map_data.py)
+         Serve the folder (python -m http.server) — fetch() will not
+         work from a double-clicked file.
+         ================================================================= */
+
+      var P = null;             // policy_data.json
+      var geojsonData = null;
+      var geojsonLayer = null;
+      var map = null;
+
+      var state = {
+        level: 'county',        // 'county' | 'state'
+        measure: 'cum',         // 'cum' | 'new'
+        yearIdx: 10,
+        selectedFips: null,
+        selectedProps: null
+      };
+
+      // color ramp on the dark basemap: 0 = dim slate, then coral light -> deep
+      var ZERO_COLOR = '#3a3a4e';
+      var RAMP = ['#fddcd3', '#fbab97', '#fe7156', '#d14a30', '#9c3520'];
+
+      function colorFor(count) {
+        if (!count || count <= 0) return ZERO_COLOR;
+        return RAMP[Math.min(Math.ceil(count), RAMP.length) - 1];
+      }
+
+      // ---------- data lookups (missing entry = 0) ----------
+      function jurisdictionEntry(props) {
+        return state.level === 'county' ? P.county[props.FIPS] : P.state[props.StateFIPS];
+      }
+      function valueFor(props) {
+        var e = jurisdictionEntry(props);
+        return e ? (e[state.measure][state.yearIdx] || 0) : 0;
+      }
+      function typesFor(props) {
+        var e = jurisdictionEntry(props);
+        if (!e) return [];
+        var src = state.measure === 'cum' ? e.typesCum : e.typesCount;
+        var order = state.level === 'county' ? P.countyTypeOrder : P.stateTypeOrder;
+        var rows = [];
+        order.forEach(function(label) {
+          var arr = src[label];
+          var v = arr ? (arr[state.yearIdx] || 0) : 0;
+          if (v > 0) rows.push({ label: label, count: v });
+        });
+        return rows;
+      }
+      function curYear() { return P.years[state.yearIdx]; }
+
+      // ---------- init (same shell as original) ----------
+      function initMap() {
+        map = L.map('cluster-map', {
+          minZoom: 3, maxZoom: 12, zoomSnap: 0.25, zoomDelta: 0.25
+        });
+        window.map = map;
+        var isChrome = /Chrome/.test(navigator.userAgent) && !/Edg/.test(navigator.userAgent);
+        var southBound = isChrome ? 8 : 14;
+        window.usBounds = L.latLngBounds([[southBound, -120], [53, -70]]);
+        map.fitBounds(window.usBounds, { padding: [10, 10] });
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
+          attribution: '© OpenStreetMap © CARTO', maxZoom: 19
+        }).addTo(map);
+
+        fetch('policy_data.json?v=' + Date.now())
+          .then(function(r) { return r.json(); })
+          .then(function(p) {
+            P = p;
+            var slider = document.getElementById('year-slider');
+            slider.max = P.years.length - 1;
+            slider.value = state.yearIdx = P.years.length - 1;
+            document.getElementById('year-val').textContent = curYear();
+            buildYearTicks();
+            return fetch('counties.geojson?v=' + Date.now());
+          })
+          .then(function(r) { return r.json(); })
+          .then(function(gj) {
+            geojsonData = gj;
+            document.getElementById('map-loading').style.display = 'none';
+
+            drawMap();
+            buildLegend();
+
+                        // ↓↓↓ PASTE STARTS HERE ↓↓↓
+            map.createPane('stateBorders');
+            map.getPane('stateBorders').style.pointerEvents = 'none';
+            map.getPane('stateBorders').style.zIndex = 450;
+
+            fetch('states.geojson?v=' + Date.now())
+              .then(function(r){ return r.json(); })
+              .then(function(sgj){
+                L.geoJSON(sgj, {
+                  pane: 'stateBorders',
+                  style: { fill: false, color: 'rgba(112, 128, 144, 0.5)', weight: 2.5 }
+                }).addTo(map);
+              });
+
+            // AK / HI fence + labels (identical to original)
+            if (P.insetBounds) {
+              var ib = P.insetBounds, akB = ib.akBounds, hiB = ib.hiBounds;
+              var pad = 0.6;
+              var ch = 1.4;
+
+              var top    = Math.max(akB[3], hiB[3]) + pad;
+              var bottom = Math.min(akB[1], hiB[1]) - pad;
+              var left   = akB[0] - pad;
+              var right  = hiB[2] + pad;
+              var divX   = (akB[2] + hiB[0]) / 2;
+
+              var fence = [
+                [bottom,    left],
+                [top - ch,  left],
+                [top,       left + ch],
+                [top,       divX],
+                [bottom,    divX],
+                [top,       divX],
+                [top,       right - ch],
+                [top - ch,  right],
+                [bottom,    right]
+              ];
+
+              L.polyline(fence, { color: "rgba(255,255,255,0.45)", weight: 2, interactive: false }).addTo(map);
+
+              L.marker([bottom + 0.4, (left + divX) / 2], { interactive: false, icon: L.divIcon({ className: '', html: '<div style="font-family:Inter,sans-serif;font-size:12px;font-weight:700;color:rgba(255,255,255,0.75);letter-spacing:2px;text-transform:uppercase;">ALASKA</div>', iconSize: [80, 14], iconAnchor: [40, 7] }) }).addTo(map);
+              L.marker([bottom + 0.4, (divX + right) / 2], { interactive: false, icon: L.divIcon({ className: '', html: '<div style="font-family:Inter,sans-serif;font-size:12px;font-weight:700;color:rgba(255,255,255,0.75);letter-spacing:2px;text-transform:uppercase;">HAWAII</div>', iconSize: [80, 14], iconAnchor: [40, 7] }) }).addTo(map);
+            }
+            setTimeout(function() { map.invalidateSize(); }, 200);
+
+            openIntro();
+          });
+      }
+
+      // ---------- draw + style ----------
+      function styleFor(feature) {
+        var p = feature.properties;
+        var fill = colorFor(valueFor(p));
+        if (state.level === 'state') {
+          // State view: paint county borders in the fill color so each
+          // state reads as one flat shape (no county seams)
+          return { fillColor: fill, fillOpacity: 1, color: fill, weight: 1, opacity: 1 };
+        }
+        var isSel = state.selectedFips === p.FIPS;
+        return {
+          fillColor: fill,
+          fillOpacity: 0.85,
+          color: isSel ? '#fe7156' : 'rgba(0,0,0,0.5)',
+          weight: isSel ? 1.8 : 0.4,
+          opacity: 1
+        };
+      }
+
+      function drawMap() {
+        if (geojsonLayer) geojsonLayer.remove();
+        geojsonLayer = L.geoJSON(geojsonData, {
+          style: styleFor,
+          onEachFeature: function(feature, layer) {
+            // tooltip content is a FUNCTION: always current, no rebinding needed
+            layer.bindTooltip(function(l) {
+              return buildTooltip(l.feature.properties);
+            }, { sticky: true });
+            layer.on('mouseover', function() {
+              if (state.level === 'county') {
+                this.setStyle({ weight: 1.5, color: 'rgba(255,255,255,0.9)' });
+                this.bringToFront();
+              }
+            });
+            layer.on('mouseout', function() { geojsonLayer.resetStyle(this); });
+            layer.on('click', function() {
+              state.selectedFips = feature.properties.FIPS;
+              state.selectedProps = feature.properties;
+              refresh();
+              showCountyPanel();
+            });
+          }
+        }).addTo(map);
+      }
+
+      // ---------- year ticks ----------
+      function buildYearTicks() {
+        var wrap = document.getElementById('year-ticks');
+        wrap.innerHTML = '';
+        P.years.forEach(function(y, i) {
+          var t = document.createElement('span');
+          t.className = 'ytick' + (i === state.yearIdx ? ' active' : '');
+          t.textContent = y;
+          t.addEventListener('click', function() { setYearIdx(i); });
+          wrap.appendChild(t);
+        });
+      }
+
+      function refreshYearTicks() {
+        document.querySelectorAll('#year-ticks .ytick').forEach(function(t, i) {
+          t.classList.toggle('active', i === state.yearIdx);
+        });
+      }
+
+      function setYearIdx(i) {
+        state.yearIdx = i;
+        document.getElementById('year-slider').value = i;
+        document.getElementById('year-val').textContent = curYear();
+        refresh();
+      }
+
+      function refresh() {
+        if (geojsonLayer) geojsonLayer.setStyle(styleFor);
+        buildLegend();
+        refreshYearTicks();
+        if (state.selectedProps && document.getElementById('county-panel').classList.contains('open')) {
+          showCountyPanel();
+        }
+      }
+
+      // ---------- tooltip ----------
+      function buildTooltip(p) {
+        var v = valueFor(p);
+        var place = state.level === 'county' ? p.name + ', ' + p.state : p.state;
+        var when = state.measure === 'cum' ? 'through ' + curYear() : 'Count in ' + curYear();
+        var out = '<div class="tt-name">' + place + '</div>';
+        if (state.level === 'county') out += '<div class="tt-fips">FIPS ' + p.FIPS + '</div>';
+        out += '<div class="tt-val">' + v + ' unfavorable ' + (v === 1 ? 'policy' : 'policies') + ' ' + when + '</div>';
+        if (v > 0) out += '<div class="tt-hint">click for policy types</div>';
+        return out;
+      }
+
+      // ---------- slide-in panel: reflects CURRENT toggles only ----------
+      function showCountyPanel() {
+        var p = state.selectedProps;
+        if (!p) return;
+        var v = valueFor(p);
+        var rows = typesFor(p);
+        var place = state.level === 'county' ? p.name + ', ' + p.state : p.state;
+
+        var html = '';
+        html += '<h2>' + place + '</h2>';
+        if (state.level === 'county') html += '<div class="fips">FIPS ' + p.FIPS + '</div>';
+        html += '<div class="context-line">' +
+          (state.level === 'county' ? 'County' : 'State') + ' \u00B7 ' +
+          (state.measure === 'cum' ? 'Cumulative' : 'Count') + ' \u00B7 ' + curYear() + '</div>';
+
+        html += '<div class="total-row"><span class="total-label">Unfavorable policies</span>' +
+                '<span class="total-val">' + v + '</span></div>';
+
+        html += '<div class="sec">Policy Types</div>';
+        if (rows.length === 0) {
+          html += '<div class="none-note">None ' +
+            (state.measure === 'cum' ? 'through ' : 'in ') + curYear() +
+            ' at the ' + state.level + ' level.</div>';
+        } else {
+          rows.forEach(function(r) {
+            html += '<div class="driver-row"><span class="driver-name">' + r.label +
+                    '</span><span class="driver-val">' + r.count + '</span></div>';
+          });
+        }
+        html += '<div class="footnote">Types sum to the total above. Change Level, Count, or Year and this panel updates.</div>';
+
+        document.getElementById('cp-body').innerHTML = html;
+        document.getElementById('county-panel').classList.add('open');
+      }
+
+      // ---------- legend ----------
+      function buildLegend() {
+        if (!P) return;
+        var maxCount = P.maxima[state.level][state.measure];
+        var el = document.getElementById('map-legend');
+        var title = (state.measure === 'cum' ? 'Cumulative' : 'Count') + ' \u00B7 ' +
+                    (state.level === 'county' ? 'County' : 'State') + ' \u00B7 ' + curYear();
+        var html = '<div class="legend-title">' + title + '</div>';
+        html += '<div class="legend-row"><span class="legend-swatch" style="background:' + ZERO_COLOR + '"></span>0</div>';
+        for (var i = 1; i <= maxCount; i++) {
+          html += '<div class="legend-row"><span class="legend-swatch" style="background:' + colorFor(i) + '"></span>' + i + '</div>';
+        }
+        el.innerHTML = html;
+      }
+
+      // ---------- sidebar wiring ----------
+      window.toggleBox = function(mode) {
+        document.getElementById('box-' + mode).classList.toggle('open');
+      };
+
+      window.resetAll = function() {
+        state.level = 'county';
+        state.measure = 'cum';
+        state.yearIdx = P ? P.years.length - 1 : 10;
+        state.selectedFips = null;
+        state.selectedProps = null;
+
+        document.querySelectorAll('#level-toggle button').forEach(function(b) {
+          b.classList.toggle('active', b.dataset.level === 'county');
+        });
+        document.querySelectorAll('#measure-toggle button').forEach(function(b) {
+          b.classList.toggle('active', b.dataset.measure === 'cum');
+        });
+        document.getElementById('level-desc').textContent = 'Each county is colored by its own county-level unfavorable policies.';
+        document.getElementById('measure-desc').textContent = 'All unfavorable policies passed through the selected year.';
+
+        var slider = document.getElementById('year-slider');
+        slider.value = state.yearIdx;
+        if (P) document.getElementById('year-val').textContent = curYear();
+
+        document.getElementById('county-panel').classList.remove('open');
+        map.fitBounds(window.usBounds, { padding: [10, 10] });
+        refresh();
+      };
+
+      document.addEventListener('DOMContentLoaded', function() {
+
+        // level toggle
+        document.querySelectorAll('#level-toggle button').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            if (btn.dataset.level === state.level) return;
+            state.level = btn.dataset.level;
+            document.querySelectorAll('#level-toggle button').forEach(function(b) {
+              b.classList.toggle('active', b === btn);
+            });
+            document.getElementById('level-desc').textContent =
+              state.level === 'county'
+                ? 'Each county is colored by its own county-level unfavorable policies.'
+                : 'Every county is colored by its STATE\u2019s unfavorable policies \u2014 whole states light up together.';
+            refresh();
+          });
+        });
+
+        // measure toggle
+        document.querySelectorAll('#measure-toggle button').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            if (btn.dataset.measure === state.measure) return;
+            state.measure = btn.dataset.measure;
+            document.querySelectorAll('#measure-toggle button').forEach(function(b) {
+              b.classList.toggle('active', b === btn);
+            });
+            document.getElementById('measure-desc').textContent =
+              state.measure === 'cum'
+                ? 'All unfavorable policies passed through the selected year.'
+                : 'Only unfavorable policies passed in the selected year.';
+            refresh();
+          });
+        });
+
+        // year slider
+        var slider = document.getElementById('year-slider');
+        slider.addEventListener('input', function() {
+          setYearIdx(Number(slider.value));
+        });
+
+        // play button
+        var playTimer = null;
+        var playBtn = document.getElementById('play-btn');
+        playBtn.addEventListener('click', function() {
+          if (playTimer) {
+            clearInterval(playTimer); playTimer = null;
+            playBtn.innerHTML = '&#9654;'; playBtn.classList.remove('playing');
+            return;
+          }
+          playBtn.innerHTML = '&#9646;&#9646;'; playBtn.classList.add('playing');
+          if (state.yearIdx >= P.years.length - 1) state.yearIdx = -1;
+          playTimer = setInterval(function() {
+            state.yearIdx++;
+            if (state.yearIdx >= P.years.length) {
+              clearInterval(playTimer); playTimer = null;
+              state.yearIdx = P.years.length - 1;
+              playBtn.innerHTML = '&#9654;'; playBtn.classList.remove('playing');
+            }
+            slider.value = state.yearIdx;
+            document.getElementById('year-val').textContent = curYear();
+            refresh();
+          }, 900);
+        });
+
+        // panel close
+        document.getElementById('panel-close-btn').addEventListener('click', function(e) {
+          e.preventDefault(); e.stopPropagation();
+          state.selectedFips = null;
+          state.selectedProps = null;
+          document.getElementById('county-panel').classList.remove('open');
+          if (geojsonLayer) geojsonLayer.setStyle(styleFor);
+        });
+
+        // intro modal wiring (same as original)
+        buildIntroDots();
+        document.getElementById('map-help-btn').addEventListener('click', openIntro);
+        document.getElementById('intro-close-btn').addEventListener('click', closeIntro);
+        document.getElementById('intro-back-btn').addEventListener('click', function() {
+          if (introState.currentSlide > 0) showIntroSlide(introState.currentSlide - 1);
+        });
+        document.getElementById('intro-next-btn').addEventListener('click', function() {
+          if (introState.currentSlide < introState.totalSlides - 1) {
+            showIntroSlide(introState.currentSlide + 1);
+          } else {
+            closeIntro();
+          }
+        });
+        var overlay = document.getElementById('intro-overlay');
+        overlay.addEventListener('click', function(e) {
+          if (e.target === overlay) closeIntro();
+        });
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape' && overlay.classList.contains('open')) closeIntro();
+        });
+
+        initMap();
+      });
+
+      // ---------- intro modal ----------
+      var introState = { currentSlide: 0, totalSlides: 3 };
+
+      function buildIntroDots() {
+        var dotsEl = document.getElementById('intro-dots');
+        dotsEl.innerHTML = '';
+        for (var i = 0; i < introState.totalSlides; i++) {
+          var d = document.createElement('div');
+          d.className = 'intro-dot' + (i === 0 ? ' active' : '');
+          dotsEl.appendChild(d);
+        }
+      }
+      function showIntroSlide(n) {
+        introState.currentSlide = n;
+        document.querySelectorAll('.intro-slide').forEach(function(s) {
+          s.classList.toggle('active', Number(s.dataset.slide) === n);
+        });
+        document.querySelectorAll('.intro-dot').forEach(function(d, i) {
+          d.classList.toggle('active', i === n);
+        });
+        document.getElementById('intro-back-btn').disabled = (n === 0);
+        document.getElementById('intro-next-btn').textContent =
+          (n === introState.totalSlides - 1) ? 'Get Started' : 'Next';
+      }
+      function openIntro() {
+        document.getElementById('intro-overlay').classList.add('open');
+        showIntroSlide(0);
+      }
+      function closeIntro() {
+        document.getElementById('intro-overlay').classList.remove('open');
+      }
+
+      window.addEventListener('resize', function() {
+        if (window.map && window.usBounds) {
+          window.map.invalidateSize();
+          window.map.fitBounds(window.usBounds, { padding: [10, 10] });
+        }
+      });
+    </script>
+
+  </body>
+</html>
