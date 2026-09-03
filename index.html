@@ -465,7 +465,7 @@
               <button data-level="county" class="active">County</button>
               <button data-level="state">State</button>
             </div>
-            <div class="mode-desc" id="level-desc">Map shows the number of restrictive policies at the selected.</div>
+            <div class="mode-desc" id="level-desc">Map shows the number of restrictive policies at the selected geographic level.</div>
           </div>
         </div>
 
@@ -523,7 +523,7 @@
             <h3>What is this map?</h3>
             <p>
               This map shows where <strong>restrictive immigration policies</strong> were adopted across U.S. counties and
-              states between <strong>2004 and 2014</strong>.
+              states between 2004 and 2014.
             </p>
             <p>
               Federal immigration reforms in 1996, followed by the expansion of immigration enforcement
@@ -551,7 +551,7 @@
                 view, all counties within a state share the same color.
             </p>
             <p>
-              <strong>Restrictive Policies </strong>allows users to toggle between <strong>Cumulative</strong> and yearly <strong>Count</strong> data.
+              <strong>Restrictive Policies </strong>allows users to toggle between <strong>Cumulative</strong> and <strong> yearly Count</strong> data.
             </p>
             <div class="intro-visual">
               <strong>Cumulative </strong>captures the total number of restrictive policies adopted through the selected year,
@@ -563,11 +563,11 @@
           <div class="intro-slide" data-slide="2">
             <h3>Exploring the Map</h3>
             <p>
-              <strong>Hover </strong>over any county to see its policy count. Click a county to open the breakdown panel,
+              <strong>Hover </strong>over any county to see its policy count. <strong>Click </strong>a county to open the breakdown panel,
               which shows the policy types contributing to that count. The panel always reflects your current
-              <strong>Lvel, Count, and Year </strong>selections.
+              <strong>Level, Count, and Year </strong>selections.
             </p>
-            <p>Press <strong>&#9654;</strong> next to the year slider to animate policy adoption from 2004&ndash;2014.</p>
+            <p>Press <strong>&#9654;</strong> next to the year slider to animate policy adoption from <strong>2004&ndash;2014.</strong></p>
             <div class="intro-visual">
               Ready to explore? Click <strong>Get Started</strong> below.
             </div>
@@ -904,8 +904,8 @@
             });
             document.getElementById('level-desc').textContent =
               state.level === 'county'
-                ? 'Map shows the number of restrictive policies at the selected'
-                : 'Map shows the number of restrictive policies at the selected';
+                ? 'Map shows the number of restrictive policies at the selected geographic level.'
+                : 'Map shows the number of restrictive policies at the selected geographic level.';
             refresh();
           });
         });
