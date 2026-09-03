@@ -389,7 +389,7 @@
       #intro-overlay.open { display: flex; }
       #intro-modal {
         position: relative;
-        width: 460px;
+        width: 660px;
         max-width: calc(100% - 40px);
         background: var(--panel-bg);
         border: 1px solid var(--panel-border);
@@ -455,8 +455,8 @@
         <div class="mode-box open" id="box-level">
           <div class="mode-header" onclick="toggleBox('level')">
             <div class="title-wrap">
-              <span>Level</span>
-              <span class="help-icon" title="Which level of government's unfavorable policies color the map. County shows each county's own policies; State colors every county by its state's policies.">?</span>
+              <span>Geographic Level</span>
+              <span class="help-icon" title="Toggle between viewing restrictive policies by individual county or aggregated to the state level."">?</span>
             </div>
             <span class="chevron">&#9660;</span>
           </div>
@@ -465,7 +465,7 @@
               <button data-level="county" class="active">County</button>
               <button data-level="state">State</button>
             </div>
-            <div class="mode-desc" id="level-desc">Each county is colored by its own county-level unfavorable policies.</div>
+            <div class="mode-desc" id="level-desc">Map shows the number of restrictive policies at the selected.</div>
           </div>
         </div>
 
@@ -473,8 +473,8 @@
         <div class="mode-box open" id="box-measure">
           <div class="mode-header" onclick="toggleBox('measure')">
             <div class="title-wrap">
-              <span>Count</span>
-              <span class="help-icon" title="Cumulative counts every unfavorable policy passed up through the selected year. New counts only policies passed in the selected year.">?</span>
+              <span>Restrictive Policies</span>
+              <span class="help-icon" title="View policies by total cumulative count through the selected year or by count passed within the selected year.">?</span>
             </div>
             <span class="chevron">&#9660;</span>
           </div>
@@ -483,7 +483,7 @@
               <button data-measure="cum" class="active">Cumulative</button>
               <button data-measure="Count">Count</button>
             </div>
-            <div class="mode-desc" id="measure-desc">All unfavorable policies passed through the selected year.</div>
+            <div class="mode-desc" id="measure-desc">All restrictive policies passed through the selected year.</div>
           </div>
         </div>
 
@@ -521,26 +521,53 @@
 
           <div class="intro-slide active" data-slide="0">
             <h3>What is this map?</h3>
-            <p>This map shows where <strong>unfavorable immigration policies</strong> were adopted across U.S. counties and states between <strong>2004 and 2014</strong>.</p>
-            <p>Policies include measures like Secure Communities participation, mandatory E-Verify, REAL ID implementation, and anti-solicitation ordinances.</p>
+            <p>
+              This map shows where <strong>restrictive immigration policies</strong> were adopted across U.S. counties and
+              states between <strong>2004 and 2014</strong>.
+            </p>
+            <p>
+              Federal immigration reforms in 1996, followed by the expansion of immigration enforcement
+              after September 11, 2001, increased the role of state and local governments in immigration
+              enforcement. Over this period, states, counties, and municipalities increasingly adopted their
+              own immigration policies amid stalled federal reform, changing immigrant settlement patterns,
+              and growing political and economic anxieties about immigration; the majority of these policies
+              were restrictive.
+            </p>
+            <p>
+              This produced a highly uneven patchwork of immigration policy across the country, even
+              among communities within the same state. Policies in this map include Secure Communities
+              participation, mandatory E-Verify, REAL ID implementation, and anti-solicitation ordinances.
+            </p>
             <div class="intro-visual">
-              Darker shades mean more unfavorable policies. Click any county to see exactly which policy types are behind its count.
+              Darker shades indicate more restrictive policies. Click a county to see which policy types
+              contribute to its total.
             </div>
           </div>
 
+
           <div class="intro-slide" data-slide="1">
-            <h3>Level &amp; Count</h3>
-            <p><strong>Level</strong> switches between each county's own policies and the policies of its state &mdash; in State view, whole states light up together.</p>
-            <p><strong>Count</strong> switches between <strong>Cumulative</strong> (everything passed up through the selected year) and <strong>Count</strong> (only what passed in that year).</p>
+            <h3>Geographic Level &amp; Restrictive Policies</h3>
+            <p> Geographic level allows users to toggle between <strong>County </strong>policies and <strong>State </strong>policies. In State
+                view, all counties within a state share the same color.
+            </p>
+            <p>
+              <strong>Restrictive Policies </strong>allows users to toggle between <strong>Cumulative</strong> and yearly <strong>Count</strong> data.
+            </p>
             <div class="intro-visual">
-              Cumulative shows the policy landscape in place; New reveals the waves of adoption.
+              <strong>Cumulative </strong>captures the total number of restrictive policies adopted through the selected year,
+              showing the policy landscape in place at that point in time. <strong>Yearly Count </strong>captures only the
+              policies adopted in the selected year, highlighting when new policies were enacted.
             </div>
           </div>
 
           <div class="intro-slide" data-slide="2">
             <h3>Exploring the Map</h3>
-            <p><strong>Hover</strong> over any county for its count. <strong>Click</strong> to open the breakdown panel showing the policy types behind that number &mdash; it always reflects your current Level, Count, and Year selections.</p>
-            <p>Press <strong>&#9654;</strong> next to the year slider to animate the 2004&ndash;2014 rollout.</p>
+            <p>
+              <strong>Hover </strong>over any county to see its policy count. Click a county to open the breakdown panel,
+              which shows the policy types contributing to that count. The panel always reflects your current
+              <strong>Lvel, Count, and Year </strong>selections.
+            </p>
+            <p>Press <strong>&#9654;</strong> next to the year slider to animate policy adoption from 2004&ndash;2014.</p>
             <div class="intro-visual">
               Ready to explore? Click <strong>Get Started</strong> below.
             </div>
@@ -645,7 +672,6 @@
             drawMap();
             buildLegend();
 
-                        // ↓↓↓ PASTE STARTS HERE ↓↓↓
             map.createPane('stateBorders');
             map.getPane('stateBorders').style.pointerEvents = 'none';
             map.getPane('stateBorders').style.zIndex = 450;
@@ -804,7 +830,7 @@
         html += '<div class="total-row"><span class="total-label">Unfavorable policies</span>' +
                 '<span class="total-val">' + v + '</span></div>';
 
-        html += '<div class="sec">Policy Types</div>';
+        html += '<div class="sec">Total Restrictive Policies</div>';
         if (rows.length === 0) {
           html += '<div class="none-note">None ' +
             (state.measure === 'cum' ? 'through ' : 'in ') + curYear() +
@@ -815,7 +841,7 @@
                     '</span><span class="driver-val">' + r.count + '</span></div>';
           });
         }
-        html += '<div class="footnote">Types sum to the total above. Change Level, Count, or Year and this panel updates.</div>';
+        html += '<div class="footnote">Toggle the Geographic Level, Count, or Year to update this panel.</div>';
 
         document.getElementById('cp-body').innerHTML = html;
         document.getElementById('county-panel').classList.add('open');
@@ -878,8 +904,8 @@
             });
             document.getElementById('level-desc').textContent =
               state.level === 'county'
-                ? 'Each county is colored by its own county-level unfavorable policies.'
-                : 'Every county is colored by its STATE\u2019s unfavorable policies \u2014 whole states light up together.';
+                ? 'Map shows the number of restrictive policies at the selected'
+                : 'Map shows the number of restrictive policies at the selected';
             refresh();
           });
         });
@@ -894,8 +920,8 @@
             });
             document.getElementById('measure-desc').textContent =
               state.measure === 'cum'
-                ? 'All unfavorable policies passed through the selected year.'
-                : 'Only unfavorable policies passed in the selected year.';
+                ? 'All restrictive policies passed through the selected year.'
+                : 'Restrictive policies passed in the selected year.';
             refresh();
           });
         });

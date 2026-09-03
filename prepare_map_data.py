@@ -140,13 +140,14 @@ with open("georef-united-states-of-america-county.json") as f:
 
 counties = []
 for item in geo:
-    geom = shape(item["geo_shape"]["geometry"])
-    geom = geom.simplify(0.01, preserve_topology=True)
+    geom_raw = shape(item["geo_shape"]["geometry"])
+    geom_simplified = geom_raw.simplify(0.01, preserve_topology=True)
     counties.append({
         "FIPS": str(item["coty_code"][0]).zfill(5),
         "ste_name": item["ste_name"][0],
         "coty_name": item["coty_name"][0],
-        "geometry": geom,
+        "geometry": geom_simplified,
+        "geometry_raw": geom_raw,
     })
 del geo
 
@@ -161,6 +162,7 @@ hawaii = [c for c in counties if c["FIPS"].startswith("15")]
 clip_box = shapely_box(-170, 50, -129, 72)
 for c in alaska:
     c["geometry"] = c["geometry"].intersection(clip_box)
+    c["geometry_raw"] = c["geometry_raw"].intersection(clip_box)
 alaska = [c for c in alaska if not c["geometry"].is_empty]
 
 ak_union = unary_union([c["geometry"] for c in alaska])
@@ -168,6 +170,10 @@ ak_cx, ak_cy = ak_union.centroid.x, ak_union.centroid.y
 for c in alaska:
     c["geometry"] = translate(
         scale(c["geometry"], xfact=0.35, yfact=0.35, origin=(ak_cx, ak_cy)),
+        xoff=35, yoff=-40,
+    )
+    c["geometry_raw"] = translate(
+        scale(c["geometry_raw"], xfact=0.35, yfact=0.35, origin=(ak_cx, ak_cy)),
         xoff=35, yoff=-40,
     )
 
@@ -178,12 +184,14 @@ ak_bounds = [min(ak_xs), min(ak_ys), max(ak_xs), max(ak_ys)]
 hi_clip = shapely_box(-161, 18.5, -154.5, 22.5)
 for c in hawaii:
     c["geometry"] = c["geometry"].intersection(hi_clip)
+    c["geometry_raw"] = c["geometry_raw"].intersection(hi_clip)
 hawaii = [c for c in hawaii if not c["geometry"].is_empty]
 
 hi_union = unary_union([c["geometry"] for c in hawaii])
 hi_cx, hi_cy = hi_union.centroid.x, hi_union.centroid.y
 for c in hawaii:
     c["geometry"] = scale(c["geometry"], xfact=1.5, yfact=1.5, origin=(hi_cx, hi_cy))
+    c["geometry_raw"] = scale(c["geometry_raw"], xfact=1.5, yfact=1.5, origin=(hi_cx, hi_cy))
 
 hi_xs = [c["geometry"].bounds[0] for c in hawaii] + [c["geometry"].bounds[2] for c in hawaii]
 hi_ys = [c["geometry"].bounds[1] for c in hawaii] + [c["geometry"].bounds[3] for c in hawaii]
@@ -193,6 +201,7 @@ x_shift = (ak_bounds[2] + 0.3) - hi_bounds_raw[0]
 y_shift = (ak_bounds[1] + ak_bounds[3]) / 2 - (hi_bounds_raw[1] + hi_bounds_raw[3]) / 2
 for c in hawaii:
     c["geometry"] = translate(c["geometry"], xoff=x_shift, yoff=y_shift)
+    c["geometry_raw"] = translate(c["geometry_raw"], xoff=x_shift, yoff=y_shift)
 
 all_counties = mainland + alaska + hawaii
 
@@ -229,7 +238,7 @@ by_state = defaultdict(list)
 state_names = {}
 for c in all_counties:
     sfips = c["FIPS"][:2]
-    by_state[sfips].append(c["geometry"])
+    by_state[sfips].append(c["geometry_raw"])
     state_names[sfips] = c["ste_name"]
 
 state_features = []
