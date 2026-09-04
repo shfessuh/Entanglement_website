@@ -389,8 +389,8 @@
       #intro-overlay.open { display: flex; }
       #intro-modal {
         position: relative;
-        width: 660px;
-        max-width: calc(100% - 40px);
+        width: min(660px, calc(100% - 40px));
+        min-width: 0;
         background: var(--panel-bg);
         border: 1px solid var(--panel-border);
         border-radius: 12px;
