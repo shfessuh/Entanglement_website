@@ -5,7 +5,6 @@
     <title>Unfavorable Immigration Policies, 2004&ndash;2014</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <!-- ===== REQUIRED EXTERNAL DEPENDENCIES ===== -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -649,7 +648,7 @@
         var southBound = isChrome ? 8 : 14;
         window.usBounds = L.latLngBounds([[southBound, -120], [53, -70]]);
         map.fitBounds(window.usBounds, { padding: [10, 10] });
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png?key=cb1_3isg_1_a87a5b96e6a90ba1f7bae7ed', {
           attribution: '© OpenStreetMap © CARTO', maxZoom: 19
         }).addTo(map);
 
